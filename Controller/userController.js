@@ -2,6 +2,23 @@ const UserRegister = require("../model/register");
 const jwt = require("jsonwebtoken");
 const nodemailer = require('nodemailer');
 const otpVerification = require('../verification/verification');
+const cloudinary = require('cloudinary').v2
+
+cloudinary.config({
+    cloud_name: 'dmda8jeie',
+    api_key: '577636815548136',
+    api_secret: '5mnwvgpRV2QFHXi_niAufkwgSGg'
+});
+
+const uploadImageToCloudinary = async (filePath) => {
+    return new Promise((resolve, reject) => {
+        cloudinary.uploader.upload(filePath, (error, result) => {
+            if (error) reject(error);
+            console.log(error)
+            resolve(result.url);
+        });
+    });
+};
 
 // Nodemailer transporter
 const transporter = nodemailer.createTransport({
@@ -30,10 +47,17 @@ const generateOTP = () => {
 const sendOtp = async (req, res) => {
     try {
         const { email } = req.body;
+        console.log(req.body)
         const user = await UserRegister.findOne({ email });
 
         if (user) {
             return res.status(400).json({ success: false, message: "User already exists with this email" });
+        }
+
+        const verifyEmail = await otpVerification.findOne({ receiver: email })
+        if (verifyEmail) {
+            // If there's an existing entry, delete it
+            await otpVerification.deleteOne({ receiver: email });
         }
 
         const otp = generateOTP();
@@ -78,6 +102,7 @@ const sendOtp = async (req, res) => {
 const verifyOtp = async (req, res) => {
     try {
         const { otp } = req.body;
+        console.log(req.body)
         const otpVerify = await otpVerification.findOne({ otp });
 
         if (!otpVerify) {
@@ -94,15 +119,14 @@ const verifyOtp = async (req, res) => {
 // Step 3: Register User (after OTP verification)
 const registerUser = async (req, res) => {
     try {
-        const { email, firstname, lastname } = req.body;
-
-        const userExists = await UserRegister.findOne({ email });
-        if (userExists) {
-            return res.status(400).json({ success: false, message: "User already registered" });
+        const { firstname, lastname } = req.body;
+        let profilePic = null
+        if (req.file) {
+            profilePic = await uploadImageToCloudinary(req.file.path);
         }
 
         const newUser = new UserRegister({
-            email,
+            profilePic: profilePic,
             firstname,
             lastname
         });

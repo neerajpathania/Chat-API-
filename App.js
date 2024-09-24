@@ -13,7 +13,7 @@ const bodyParser = require('body-parser');
 const server = http.createServer(app)
 const PORT = process.env.PORT || 8000;
 
-app.use(express.json())
+app.use(express.json());
 app.use(bodyParser.json());
 app.use(cors({
     origin: 'http://localhost:5173',

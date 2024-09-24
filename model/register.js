@@ -1,9 +1,5 @@
 const mongoose = require('mongoose')
 const registerSchema = new mongoose.Schema({
-    email: {
-        type: String,
-        required: [true]
-    },
     firstname: {
         type: String,
         required: [true]
@@ -11,6 +7,9 @@ const registerSchema = new mongoose.Schema({
     lastname: {
         type: String,
         required: [true]
+    },
+    profilePic: {
+        type: String
     },
     token: {
         type: String,
